@@ -30,8 +30,39 @@ const protectedRoute = (req, res) => {
     res.json({ message: 'This is a protected route' });
 };
 
+// Register Admin
+const registerAdmin = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({ message: 'Admin already exists' });
+        }
+
+        // Create a new admin
+        const newAdmin = new Admin({
+            email,
+            password,
+        });
+
+        // Hash the password before saving
+        const salt = await bcrypt.genSalt(10);
+        newAdmin.password = await bcrypt.hash(newAdmin.password, salt);
+
+        // Save the admin to the database
+        await newAdmin.save();
+
+        res.status(201).json({ message: 'Admin registered successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     loginAdmin,
     logoutAdmin,
     protectedRoute,
+    registerAdmin,
 };
